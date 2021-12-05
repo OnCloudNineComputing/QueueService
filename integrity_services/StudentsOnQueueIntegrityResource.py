@@ -20,46 +20,24 @@ def time_validation(format):
     return time_valid
 
 
-class OHIntegrity(BaseIntegrityResource):
+class StudentsOnQueueIntegrity(BaseIntegrityResource):
 
     def __init__(self):
-        super(OHIntegrity, self).__init__()
+        super(StudentsOnQueueIntegrity, self).__init__()
 
     field_to_type = {
-        'id': int,
-        'ta_email': str,
-        'ta_firstname': str,
-        'ta_lastname': str,
+        'queue_id': int,
+        'time_added': str,
+        'student_name': str,
+        'student_email': str,
         'location': str,
-        'course_name': str,
-        'course_number': str,
-        'zoom_link': str,
-        'start_time': str,
-        'end_time': str,
-        'start_date': str,
-        'end_date': str,
-        'oh_days': str
+        'notes': str,
+        "if_taken": bool
     }
 
-    required_fields = ["ta_email", "ta_firstname", "ta_lastname", "course_name", "course_number",
-                       "start_time", "end_time", "oh_days"]
+    required_fields = ["student_email"]
 
     field_to_validation_fn = {
-        'oh_days': ValidationFunction(lambda x: re.match("^[MTWRFO]+$", x) is not None,
-                                      "acceptable values are any combination of " +
-                                      "MTWRFO, where O is for an online course."),
-        'start_time': ValidationFunction(time_validation("%I:%M %p"),
-                                         "must be a string in this format: " +
-                                         "'Hour{1-12}:Minute{00-59} AM/PM'."),
-        'end_time':  ValidationFunction(time_validation("%I:%M %p"),
-                                         "must be a string in this format: " +
-                                         "'Hour{1-12}:Minute{00-59} AM/PM'."),
-        'start_date': ValidationFunction(time_validation("%m/%d/%y"),
-                                       "must be a string in this format: " +
-                                       "'month{00-12}/day{00-31}/year{00-99}'."),
-        'end_date': ValidationFunction(time_validation("%m/%d/%y"),
-                                       "must be a string in this format: " +
-                                       "'month{00-12}/day{00-31}/year{00-99}'."),
     }
 
 
@@ -73,13 +51,13 @@ class OHIntegrity(BaseIntegrityResource):
     @classmethod
     def field_validation(cls, fields):
         for field in fields:
-            if field not in OHIntegrity.field_to_type:
+            if field not in StudentsOnQueueIntegrity.field_to_type:
                 return False
         return True
 
     @classmethod
     def column_validation(cls, fields):
-        if not OHIntegrity.field_validation(fields):
+        if not StudentsOnQueueIntegrity.field_validation(fields):
             return 400, {"fields": "Column Does Not Exist"}
         else:
             return 200, {}
@@ -90,19 +68,19 @@ class OHIntegrity(BaseIntegrityResource):
         errors = {}
 
         for k in data.keys():
-            if k not in OHIntegrity.field_to_type:
+            if k not in StudentsOnQueueIntegrity.field_to_type:
                 errors["fields"] = "Invalid Data Fields Provided"
 
         if errors:
             return 400, errors
 
         for field in data.keys():
-            required_type = OHIntegrity.field_to_type[field]
+            required_type = StudentsOnQueueIntegrity.field_to_type[field]
             if type(field) != required_type:
                 errors[field] = "Invalid {0} provided, must be of type {1}".format(field, str(type(required_type)))
 
-            elif field in OHIntegrity.field_to_validation_fn and not OHIntegrity.field_to_validation_fn[field].validate(data[field]):
-                errors[field] = OHIntegrity.field_to_validation_fn[field].error_msg
+            elif field in StudentsOnQueueIntegrity.field_to_validation_fn and not StudentsOnQueueIntegrity.field_to_validation_fn[field].validate(data[field]):
+                errors[field] = StudentsOnQueueIntegrity.field_to_validation_fn[field].error_msg
 
         if errors:
             return 400, errors
@@ -115,13 +93,13 @@ class OHIntegrity(BaseIntegrityResource):
         errors = {}
 
         try:
-            for r in OHIntegrity.required_fields:
+            for r in StudentsOnQueueIntegrity.required_fields:
                 if r not in input_fields:
-                    raise ValueError("Missing required data fields; {0} required".format(", ".join(OHIntegrity.required_fields)))
+                    raise ValueError("Missing required data fields; {0} required".format(", ".join(StudentsOnQueueIntegrity.required_fields)))
         except ValueError as v:
             errors["required_fields"] = str(v)
 
-        type_errors = OHIntegrity.type_validation(data)
+        type_errors = StudentsOnQueueIntegrity.type_validation(data)
 
         if type_errors[0] == 400:
             errors.update(type_errors[1])
@@ -132,17 +110,16 @@ class OHIntegrity(BaseIntegrityResource):
         return 200, "Input Validated"
 
     @classmethod
-    def post_responses(cls, res):
+    def post_responses(cls, res, db_result=None):
         rsp = ""
         if res == 422:
-            rsp = Response("OfficeHours already exists!", status=422,
+            rsp = Response("Student already exists!", status=422,
                            content_type="text/plain")
         elif type(res) == tuple:
             if res[0] == 400:
                 rsp = Response(json.dumps(res[1], default=str), status=res[0], content_type="application/json")
         elif res is not None:
-            rsp = Response("Success! Created Office Hours with the given " +
-                           "information.", status=201,
+            rsp = Response(json.dumps(db_result), status=201,
                            content_type="text/plain")
         else:
             rsp = Response("Failed! Unprocessable entity.",
@@ -171,7 +148,7 @@ class OHIntegrity(BaseIntegrityResource):
 
     @classmethod
     def oh_get_responses(cls, res):
-        status = OHIntegrity.get_responses(res)
+        status = StudentsOnQueueIntegrity.get_responses(res)
         if status == 200:
             rsp = Response(json.dumps(res, default=str), status=status, content_type="application/json")
         else:
@@ -181,7 +158,7 @@ class OHIntegrity(BaseIntegrityResource):
 
     @classmethod
     def oh_put_responses(cls, res):
-        status = OHIntegrity.put_responses(res)
+        status = StudentsOnQueueIntegrity.put_responses(res)
         rsp = ""
         if status == 422:
             rsp = Response("Update violates data integrity!", status=status,
@@ -189,7 +166,7 @@ class OHIntegrity(BaseIntegrityResource):
         elif status == 400:
             rsp = Response(json.dumps(res[1], default=str), status=status, content_type="application/json")
         elif status == 200:
-            rsp = Response("Success! The given data for the office hours " +
+            rsp = Response("Success! The given data for the student " +
                            "that matched was updated as requested.", status=status,
                            content_type="text/plain")
         elif status==404:
@@ -202,7 +179,7 @@ class OHIntegrity(BaseIntegrityResource):
 
     @classmethod
     def oh_delete_responses(cls, res):
-        status = OHIntegrity.delete_responses(res)
+        status = StudentsOnQueueIntegrity.delete_responses(res)
         if status == 204:
             rsp = Response("Success!",
                            status=status, content_type="text/plain")

@@ -39,9 +39,17 @@ def get_db_info():
     return db_info
 
 
-def get_notifications():
-    return [
-        Notification("arn:aws:sns:us-east-1:969959736549:OHTopic", "POST", "/officehours")
-    ]
+def get_dynamo_info():
+    aws_access_key_id = os.environ.get("AWS_ACCESS_KEY_ID", None)
+    aws_secret_access_key = os.environ.get("AWS_SECRET_ACCESS_KEY", None)
+    aws_session_token = os.environ.get("AWS_SESSION_TOKEN", None)
+    region_name = 'us-east-1'
+
+    return {
+        'aws_access_key_id': aws_access_key_id,
+        'aws_secret_access_key': aws_secret_access_key,
+        'aws_session_token': aws_session_token,
+        'region_name': region_name
+    }
 
 

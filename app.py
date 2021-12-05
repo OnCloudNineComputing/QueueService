@@ -6,7 +6,9 @@ from datetime import datetime
 import utils.rest_utils as rest_utils
 
 from middleware.notification import NotificationMiddlewareHandler
-from application_services.OHResource.oh_service import OHResource
+from application_services.QueueResource.queue_service import QueueResource
+from application_services.QueueResource.students_on_queue_service import StudentsOnQueueResource
+
 from database_services.RDBService import RDBService as RDBService
 
 logging.basicConfig(level=logging.DEBUG)
@@ -29,44 +31,7 @@ def health_check():
     return rsp
 
 
-# TODO Remove later. Solely for explanatory purposes.
-# The method take any REST request, and produces a response indicating what
-# the parameters, headers, etc. are. This is simply for education purposes.
-#
-@app.route("/api/demo/<parameter1>", methods=["GET", "POST", "PUT", "DELETE"])
-@app.route("/api/demo/", methods=["GET", "POST", "PUT", "DELETE"])
-def demo(parameter1=None):
-    """
-    Returns a JSON object containing a description of the received request.
-
-    :param parameter1: The first path parameter.
-    :return: JSON document containing information about the request.
-    """
-
-    # DFF TODO -- We should wrap with an exception pattern.
-    #
-
-    # Mostly for isolation. The rest of the method is isolated from the specifics of Flask.
-    inputs = rest_utils.RESTContext(request, {"parameter1": parameter1})
-
-    # DFF TODO -- We should replace with logging.
-    r_json = inputs.to_json()
-    msg = {
-        "/demo received the following inputs": inputs.to_json()
-    }
-    print("/api/demo/<parameter> received/returned:\n", msg)
-
-    rsp = Response(json.dumps(msg), status=200, content_type="application/json")
-    return rsp
-
-
-
-@app.route('/')
-def hello_world():
-    return '<u>Hello World!</u>'
-
-
-@app.route('/officehours', methods=['GET', 'POST'])
+@app.route('/queue', methods=['GET', 'POST'])
 def oh_collection():
     """
     1. HTTP GET return all users.
@@ -74,18 +39,18 @@ def oh_collection():
     :return:
     """
     inputs = rest_utils.RESTContext(request)
-    rest_utils.log_request("oh_collection", inputs)
+    rest_utils.log_request("queue_collection", inputs)
 
     if inputs.method == "GET":
-        rsp = OHResource.get_by_template(inputs.args, inputs, order_by=inputs.order_by, limit=inputs.limit, offset=inputs.offset,
-                                              field_list=inputs.fields)
+        rsp = QueueResource.get_all()
     elif inputs.method == "POST":
-        rsp = OHResource.create(inputs.data)
+        rsp = QueueResource.create(inputs.data)
 
     return rsp
 
-@app.route('/officehours/<oh_id>', methods=['GET', 'PUT', 'DELETE'])
-def specific_oh(oh_id):
+
+@app.route('/queue/<queue_id>', methods=['GET', 'PUT'])
+def specific_oh(queue_id):
     """
     1. Get a specific one by ID.
     2. Update body and update.
@@ -94,24 +59,55 @@ def specific_oh(oh_id):
     :return:
     """
     inputs = rest_utils.RESTContext(request)
-    rest_utils.log_request("oh_by_id", inputs)
+    rest_utils.log_request("queue_by_id", inputs)
     if inputs.method == "GET":
-        rsp = OHResource.get_by_oh_id(oh_id)
+        rsp = QueueResource.get_by_queue_id(queue_id)
 
     elif inputs.method == 'PUT':
-        rsp = OHResource.update_by_oh_id(oh_id, inputs.data)
-
-    elif inputs.method == 'DELETE':
-        rsp = OHResource.delete_by_oh_id(oh_id)
+        rsp = QueueResource.update_by_queue_id(queue_id, inputs.data)
 
     return rsp
 
-@app.after_request
-def send_notifications(rsp):
-    res, e = NotificationMiddlewareHandler.notify(request, rsp)
-    if not res:
-        app.logger.error("Couldn't send notif: " + str(e))
+
+@app.route('/queue/<queue_id>/students', methods=['GET','POST'])
+def specific_oh(queue_id):
+    """
+    1. Get a specific one by ID.
+    2. Update body and update.
+    3. Delete would ID and delete it.
+    :param user_id:
+    :return:
+    """
+    inputs = rest_utils.RESTContext(request)
+    rest_utils.log_request("students", inputs)
+    if inputs.method == "GET":
+        rsp = StudentsOnQueueResource.get_all_students(queue_id)
+
+    elif inputs.method == 'POST':
+        rsp = StudentsOnQueueResource.create(queue_id, inputs.data)
+
     return rsp
+
+
+@app.route('/queue/<queue_id>/students/<timestamp>', methods=['GET', 'PUT'])
+def specific_oh(queue_id, timestamp):
+    """
+    1. Get a specific one by ID.
+    2. Update body and update.
+    3. Delete would ID and delete it.
+    :param user_id:
+    :return:
+    """
+    inputs = rest_utils.RESTContext(request)
+    rest_utils.log_request("students_get_by_timestamp", inputs)
+    if inputs.method == "GET":
+        rsp = StudentsOnQueueResource.get_by_timestamp(queue_id, timestamp)
+
+    elif inputs.method == 'PUT':
+        rsp = StudentsOnQueueResource.get_by_timestamp(queue_id, timestamp, inputs.data)
+
+    return rsp
+
 
 if __name__ == '__main__':
     app.run()
