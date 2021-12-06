@@ -76,8 +76,8 @@ class StudentsOnQueueIntegrity(BaseIntegrityResource):
 
         for field in data.keys():
             required_type = StudentsOnQueueIntegrity.field_to_type[field]
-            if type(field) != required_type:
-                errors[field] = "Invalid {0} provided, must be of type {1}".format(field, str(type(required_type)))
+            if type(data[field]) != required_type:
+                errors[field] = "Invalid {0} provided, must be of type {1}".format(field, str(required_type))
 
             elif field in StudentsOnQueueIntegrity.field_to_validation_fn and not StudentsOnQueueIntegrity.field_to_validation_fn[field].validate(data[field]):
                 errors[field] = StudentsOnQueueIntegrity.field_to_validation_fn[field].error_msg
@@ -118,6 +118,9 @@ class StudentsOnQueueIntegrity(BaseIntegrityResource):
         elif type(res) == tuple:
             if res[0] == 400:
                 rsp = Response(json.dumps(res[1], default=str), status=res[0], content_type="application/json")
+            else:
+                rsp = Response(json.dumps(db_result), status=200,
+                         content_type="text/plain")
         elif res is not None:
             rsp = Response(json.dumps(db_result), status=201,
                            content_type="text/plain")

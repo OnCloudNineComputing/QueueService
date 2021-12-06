@@ -11,7 +11,7 @@ import string
 def get_db_connection():
     # get keys from aws credentials
     db_info = context.get_dynamo_info()
-    dynamodb = boto3.resource('dynamodb',
+    dynamodb = boto3.resource('dynamodb', #endpoint_url="http://localhost:8000",
                               aws_access_key_id=db_info['aws_access_key_id'],
                               aws_secret_access_key=db_info['aws_secret_access_key'],
                               aws_session_token=db_info['aws_session_token'],
@@ -34,7 +34,7 @@ def query_table(table_name, key=None, value=None):
 
     if key and value:
         filtering_exp = Key(key).eq(value)
-        return table.query(KeyConditionExpression=filtering_exp)
+        return table.query(KeyConditionExpression=filtering_exp)['Items']
 
     raise ValueError('Parameters missing or invalid')
 
@@ -52,7 +52,7 @@ def get_item(table_name, partition_key, partition_value, sort_key=None, sort_val
         response = table.get_item(Key={
             partition_key: partition_value
         })
-    return response
+    return response['Item']
 
 
 def put_item(table_name, item):
@@ -144,12 +144,6 @@ def test_get_student_item():
 def test_query_queue_id():
     res = query_table('Queues', 'QueueId', "64572841-89e5-4c42-89a2-b963a689d862")
     print("Result = \n", json.dumps(res, indent=4, default=str))
-
-
-# change student "IsTaken" field to 1 or 0
-def test_student_taken():
-    update_student_taken('Students', "QueueId", "beba33cc-2856-457a-b50e-9fedcefef8d7", "Timestamp",
-                         "2021-12-05 05:55:46.666")
 
 
 ##### unused functions from template that could be helpful

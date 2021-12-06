@@ -50,7 +50,7 @@ def oh_collection():
 
 
 @app.route('/queue/<queue_id>', methods=['GET', 'PUT'])
-def specific_oh(queue_id):
+def get_queue(queue_id):
     """
     1. Get a specific one by ID.
     2. Update body and update.
@@ -70,7 +70,7 @@ def specific_oh(queue_id):
 
 
 @app.route('/queue/<queue_id>/students', methods=['GET','POST'])
-def specific_oh(queue_id):
+def get_students(queue_id):
     """
     1. Get a specific one by ID.
     2. Update body and update.
@@ -90,7 +90,7 @@ def specific_oh(queue_id):
 
 
 @app.route('/queue/<queue_id>/students/<timestamp>', methods=['GET', 'PUT'])
-def specific_oh(queue_id, timestamp):
+def get_student(queue_id, timestamp):
     """
     1. Get a specific one by ID.
     2. Update body and update.
@@ -104,7 +104,7 @@ def specific_oh(queue_id, timestamp):
         rsp = StudentsOnQueueResource.get_by_timestamp(queue_id, timestamp)
 
     elif inputs.method == 'PUT':
-        rsp = StudentsOnQueueResource.get_by_timestamp(queue_id, timestamp, inputs.data)
+        rsp = StudentsOnQueueResource.update_by_timestamp(queue_id, timestamp, inputs.data)
 
     return rsp
 

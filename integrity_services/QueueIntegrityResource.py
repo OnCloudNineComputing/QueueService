@@ -121,6 +121,9 @@ class QueueIntegrity(BaseIntegrityResource):
         elif type(res) == tuple:
             if res[0] == 400:
                 rsp = Response(json.dumps(res[1], default=str), status=res[0], content_type="application/json")
+            else:
+                rsp = Response(json.dumps(db_result), status=200,
+                         content_type="text/plain")
         elif res is not None:
             rsp = Response(json.dumps(db_result), status=201,
                            content_type="text/plain")
