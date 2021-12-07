@@ -71,7 +71,7 @@ class QueueResource(BaseRDBApplicationResource):
     @classmethod
     def get_links(cls, data, queue_id=None):
         if queue_id is None:
-            queue_id = data['QueueId']
+            queue_id = data['queue_id']
         links = {
             'self': '/queue/{0}'.format(queue_id),
             'students': '/queue/{0}/students'.format(queue_id),
@@ -80,4 +80,4 @@ class QueueResource(BaseRDBApplicationResource):
 
     @classmethod
     def get_data_resource_info(cls):
-        return 'Queues', 'QueueId'
+        return 'Queues', 'queue_id'

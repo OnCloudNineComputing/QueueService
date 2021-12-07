@@ -26,6 +26,7 @@ class QueueIntegrity(BaseIntegrityResource):
         super(QueueIntegrity, self).__init__()
 
     field_to_type = {
+        'office_hours_info': dict,
         'queue_id': int,
         'ta_email': str,
         'ta_firstname': str,
@@ -79,7 +80,7 @@ class QueueIntegrity(BaseIntegrityResource):
 
         for field in data.keys():
             required_type = QueueIntegrity.field_to_type[field]
-            if type(field) != required_type:
+            if type(data[field]) != required_type:
                 errors[field] = "Invalid {0} provided, must be of type {1}".format(field, str(type(required_type)))
 
             elif field in QueueIntegrity.field_to_validation_fn and not QueueIntegrity.field_to_validation_fn[field].validate(data[field]):

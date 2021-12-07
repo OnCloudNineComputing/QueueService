@@ -11,11 +11,11 @@ import string
 def get_db_connection():
     # get keys from aws credentials
     db_info = context.get_dynamo_info()
-    dynamodb = boto3.resource('dynamodb', #endpoint_url="http://localhost:8000",
+    dynamodb = boto3.resource('dynamodb', region_name=db_info['region_name'],
                               aws_access_key_id=db_info['aws_access_key_id'],
                               aws_secret_access_key=db_info['aws_secret_access_key'],
-                              aws_session_token=db_info['aws_session_token'],
-                              region_name=db_info['region_name'])
+                              aws_session_token=db_info['aws_session_token'])
+
 
     return dynamodb
 
@@ -112,7 +112,7 @@ def test_add_item_students():
         "IfTaken": 0,
         "Notes": "Help with first question"
     }
-    add_item('Students', item, 'QueueId', '1', 'Timestamp', timestamp)
+    add_item('Students', item, 'queue_id', '1', 'timestamp', timestamp)
 
 
 # add item to Queue table
@@ -125,24 +125,24 @@ def test_add_item_queue():
         "VersionID": str(uuid.uuid4())
 
     }
-    add_item('Queues', item, 'QueueId', str(uuid.uuid4()))
+    add_item('Queues', item, 'queue_id', str(uuid.uuid4()))
 
 
-# query students table by QueueId
+# query students table by queue_id
 def test_query_students_id():
-    res = query_table('Students', 'QueueId', '1')
+    res = query_table('Students', 'queue_id', '1')
     print("Result = \n", json.dumps(res, indent=4, default=str))
 
 
-# query students table by QueueId and Timestamp
+# query students table by queue_id and timestamp
 def test_get_student_item():
-    res = get_item('Students', 'QueueId', '1', 'Timestamp', "2021-12-05 06:14:11.515")
+    res = get_item('Students', 'queue_id', '1', 'timestamp', "2021-12-05 06:14:11.515")
     print("Result = \n", json.dumps(res, indent=4, default=str))
 
 
-# query queue table by QueueId
+# query queue table by queue_id
 def test_query_queue_id():
-    res = query_table('Queues', 'QueueId', "64572841-89e5-4c42-89a2-b963a689d862")
+    res = query_table('Queues', 'queue_id', "64572841-89e5-4c42-89a2-b963a689d862")
     print("Result = \n", json.dumps(res, indent=4, default=str))
 
 
